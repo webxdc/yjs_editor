@@ -3,44 +3,39 @@ import 'vue-good-table-next/dist/vue-good-table-next.css'
 
 import { VueGoodTable } from 'vue-good-table-next'
 import { ref } from 'vue'
+import { stump_data } from '~/stump'
 
 const columns = ref([
   {
     label: 'Timestamp',
     field: 'ts',
-    type: 'number',
+    type: 'date',
+    dateInputFormat: 'T',
+    dateOutputFormat: 'E H:m:ss',
+    sortable: false,
   },
   {
     label: 'Type',
     field: 'event_type',
     type: 'number',
-    dateInputFormat: 'T',
-    dateOutputFormat: 'MMM do yyyy',
+    sortable: false,
   },
   {
     label: 'Data 1',
     field: 'data1',
     type: 'number',
+    sortable: false,
   },
   {
     label: 'Data 2',
     field: 'data2',
     type: 'number',
+    sortable: false,
   },
 ])
 
-const data = ref([] as LogData[])
-
-const rows2 = computed(() => {
-  return data.value.map((row) => {
-    return {
-      data1: row.payload.data1,
-      data2: row.payload.data2,
-      event_type: row.payload.event_type,
-      ts: row.payload.ts,
-    }
-  })
-})
+const dev = true
+const data = ref([] as usedData[])
 
 const options = {
   enabled: true,
@@ -49,41 +44,72 @@ const options = {
 
 interface LogData {
   payload: {
-    data1: Number
-    data2: Number
-    event_type: String
+    data1: any
+    data2: any
+    event_type: any
     ts: Number
   }
 }
 
-/* window.webxdc.sendUpdate({
-  payload: {
-    data1: 'hi',
-    data2: 'du',
-    event_type: 'hello',
-    ts: 123,
-  },
-}, `${window.webxdc.selfName} just published changes to the shared document`)
- */
+interface usedData {
+  data1: any
+  data2: any
+  event_type: any
+  ts: Number
+}
+
 function receiveUpdate(log_data: LogData) {
   // eslint-disable-next-line no-console
   console.log('new logs received')
-  data.value.push(log_data)
+  data.value.push(transformData(log_data))
+}
+
+const EVENT_ID_TO_NAME = {
+
+}
+
+function transformData(log_data: LogData) {
+  log_data.payload.event_type = null
+  return log_data.payload
 }
 
 onMounted(() => {
   window.webxdc.setUpdateListener(receiveUpdate, 0)
+
+  if (dev) {
+    stump_data.forEach((row) => {
+      data.value.push(transformData(row))
+    })
+  }
 })
 </script>
 
 <template lang="pug">
-h1.text-2xl Current device logs
 div
-  vue-good-table(
-    :columns="columns"
-    :rows="rows2"
-    :search-options = "options"
+  h1.text-2xl.leading-none.mb-1 Current device logs
+  div
+    VueGoodTable(
+      :columns="columns"
+      :rows="data"
+      :search-options = "options"
+      compactMode
     )
-div
-  | {{data}}
 </template>
+
+<style lang="sass">
+
+table.vgt-table td
+  padding: 2px !important
+
+thead
+  display: none
+
+.vgt-right-align
+  text-align: left !important
+
+.vgt-global-search__input
+  padding-left: 5px !important
+
+.magnifying-glass
+  display: none !important
+</style>

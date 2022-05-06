@@ -23,3 +23,11 @@ export const stump_data = [
   { payload: { data1: null, data2: null, event_type: 2100, ts: 1651756396005 } },
   { payload: { data1: 'src/imap/idle.rs:57: INBOX: Idle entering wait-on-remote state', data2: null, event_type: 100, ts: 1651756396111 } },
 ]
+
+/*
+- Left align
+- Time-stamps reversed
+- Kleinere Zeilen
+- Button für setup?
+- Filterten view kopieren
+*/
