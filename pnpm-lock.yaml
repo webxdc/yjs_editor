@@ -9,6 +9,7 @@ specifiers:
   '@vitejs/plugin-vue': ^2.3.1
   '@vue/test-utils': ^2.0.0-rc.21
   '@vueuse/core': ^8.3.1
+  cross-env: ^7.0.3
   eslint: ^8.14.0
   jsdom: ^19.0.0
   pnpm: ^7.0.0
@@ -42,6 +43,7 @@ devDependencies:
   '@unocss/reset': 0.32.9
   '@vitejs/plugin-vue': 2.3.1_vite@2.9.7+vue@3.2.33
   '@vue/test-utils': 2.0.0-rc.21_vue@3.2.33
+  cross-env: 7.0.3
   eslint: 8.14.0
   jsdom: 19.0.0
   pnpm: 7.0.0
@@ -1111,6 +1113,14 @@ packages:
       '@babel/parser': 7.16.6
       '@babel/types': 7.17.10
     dev: false
+
+  /cross-env/7.0.3:
+    resolution: {integrity: sha512-+/HKd6EgcQCJGh2PSjZuUitQBQynKor4wrFbRg4DtAgS1aWO+gU52xpH7M9ScGgXSYmAVS9bIJ8EzuaGw0oNAw==}
+    engines: {node: '>=10.14', npm: '>=6', yarn: '>=1'}
+    hasBin: true
+    dependencies:
+      cross-spawn: 7.0.3
+    dev: true
 
   /cross-spawn/7.0.3:
     resolution: {integrity: sha512-iRDPJKUPVEND7dHPO8rkbOnPpyDygcDFtWjpeWNCgy8WP2rXcxXL8TskReQl6OrB2G7+UJrags1q15Fudc7G6w==}

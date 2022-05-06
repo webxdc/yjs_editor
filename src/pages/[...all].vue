@@ -64,19 +64,14 @@ function receiveUpdate(log_data: LogData) {
   data.value.push(transformData(log_data))
 }
 
-const EVENT_ID_TO_NAME = {
-
-}
-
 function transformData(log_data: LogData) {
-  log_data.payload.event_type = null
   return log_data.payload
 }
 
 onMounted(() => {
   window.webxdc.setUpdateListener(receiveUpdate, 0)
 
-  if (dev) {
+  if (import.meta.env.DEV) {
     stump_data.forEach((row) => {
       data.value.push(transformData(row))
     })

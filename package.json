@@ -2,7 +2,7 @@
   "private": true,
   "packageManager": "pnpm@7.0.0",
   "scripts": {
-    "build": "vite build && ./create-xdc.sh",
+    "build": "cross-env NODE_ENV=production && vite build && ./create-xdc.sh",
     "dev": "vite --port 3333 --open",
     "lint": "eslint .",
     "typecheck": "vue-tsc --noEmit",
@@ -35,7 +35,8 @@
     "vite": "^2.9.7",
     "vite-plugin-pages": "^0.23.0",
     "vitest": "^0.10.1",
-    "vue-tsc": "^0.34.11"
+    "vue-tsc": "^0.34.11",
+    "cross-env": "^7.0.3"
   },
   "eslintConfig": {
     "extends": "@antfu"
