@@ -1,94 +1,62 @@
 <script setup lang="ts">
-import 'vue-good-table-next/dist/vue-good-table-next.css'
+import * as Y from 'yjs'
+import { redo, undo, ySyncPlugin } from 'y-prosemirror'
+import { EditorState } from 'prosemirror-state'
+import { EditorView } from 'prosemirror-view'
+// @ts-expect-error 'yeet'
+import { exampleSetup } from 'prosemirror-example-setup'
+// @ts-expect-error 'yeet'
+import { keymap } from 'prosemirror-keymap'
+import type { ReceivedStatusUpdate } from 'webxdc'
+import { schema } from '~/schema'
+import '~/styles/style.css'
 
-import { VueGoodTable } from 'vue-good-table-next'
-import { ref } from 'vue'
-import { stump_data } from '~/stump'
+const ydoc = new Y.Doc()
+const type = ydoc.getXmlFragment('prosemirror')
 
-const columns = ref([
-  {
-    label: 'Timestamp',
-    field: 'ts',
-    type: 'date',
-    dateInputFormat: 'T',
-    dateOutputFormat: 'E H:m:ss',
-    sortable: false,
-  },
-  {
-    label: 'Type',
-    field: 'event_type',
-    type: 'number',
-    sortable: false,
-  },
-  {
-    label: 'Data 1',
-    field: 'data1',
-    type: 'number',
-    sortable: false,
-  },
-  {
-    label: 'Data 2',
-    field: 'data2',
-    type: 'number',
-    sortable: false,
-  },
-])
+ydoc.on('update', (update) => {
+  window.webxdc.sendUpdate({ payload: { update, sender: window.webxdc.selfAddr } }, 'new state')
+})
 
-const dev = true
-const data = ref([] as usedData[])
-
-const options = {
-  enabled: true,
-  skipDiacritics: true,
+interface Payload {
+  update: any
+  sender: string
 }
 
-interface LogData {
-  payload: {
-    data1: any
-    data2: any
-    event_type: any
-    ts: Number
-  }
-}
-
-interface usedData {
-  data1: any
-  data2: any
-  event_type: any
-  ts: Number
-}
-
-function receiveUpdate(log_data: LogData) {
+function receiveUpdate(update: ReceivedStatusUpdate<Payload>) {
   // eslint-disable-next-line no-console
-  console.log('new logs received')
-  data.value.push(transformData(log_data))
+  if (update.payload.sender !== window.webxdc.selfAddr)
+    Y.applyUpdate(ydoc, update.payload.update)
 }
 
-function transformData(log_data: LogData) {
-  return log_data.payload
-}
 
 onMounted(() => {
-  window.webxdc.setUpdateListener(receiveUpdate, 0)
+  const editor = document.querySelector('#editor')!
 
-  if (import.meta.env.DEV) {
-    stump_data.forEach((row) => {
-      data.value.push(transformData(row))
-    })
-  }
+  // @ts-expect-error 'hi'
+  const t = new EditorView(editor, {
+    state: EditorState.create({
+      schema,
+      plugins: [
+        //yUndoPlugin(),
+        ySyncPlugin(type),
+        keymap({
+          'Mod-z': undo,
+          'Mod-y': redo,
+          'Mod-Shift-z': redo,
+        }),
+      ].concat(exampleSetup({ schema })),
+    }),
+  })
+  window.webxdc.setUpdateListener(receiveUpdate, 0)
 })
 </script>
 
 <template lang="pug">
 div
-  h1.text-2xl.leading-none.mb-1 Current device logs
-  div
-    VueGoodTable(
-      :columns="columns"
-      :rows="data"
-      :search-options = "options"
-      compactMode
-    )
+  h1.text-2xl.leading-none.mb-1 Cooperative editing
+  div(id="editor")
+
 </template>
 
 <style lang="sass">
