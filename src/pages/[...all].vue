@@ -10,30 +10,67 @@ import { keymap } from 'prosemirror-keymap'
 import type { ReceivedStatusUpdate } from 'webxdc'
 import { schema } from '~/schema'
 import '~/styles/style.css'
-import {toggleDark, isDark} from '~/composables/dark'
+import {toggleDark} from '~/composables/dark'
+
+
+interface Payload {
+  updates: any[]
+  sender: string
+}
 
 const ydoc = new Y.Doc()
 const type = ydoc.getXmlFragment('prosemirror')
 
-ydoc.on('update', (update) => {
-  window.webxdc.sendUpdate({ payload: { update, sender: window.webxdc.selfAddr } }, 'new state')
+// collect many updates from yjs for debounceing
+const updates: Uint8Array[] = []
+let timeOut: NodeJS.Timeout
+
+// this gets called every keystroke
+ydoc.on('update', (update) => {  
+  updates.push(update)
+  if (timeOut) {
+    clearTimeout(timeOut)
+  }
+  timeOut = setTimeout(() => sendUpdate(updates), 3000)
 })
 
-interface Payload {
-  update: any
-  sender: string
+// actually sends the collected updates through deltachet
+function sendUpdate(updates: Uint8Array[]) {
+  console.log('sending update');
+  window.webxdc.sendUpdate({ payload: { updates, sender: window.webxdc.selfAddr }}, '')
 }
 
+// saves the state of the editor and last seen sequence number to local storage
+function saveState(state: Uint8Array, id: number) {
+  const state_encoded = Y.encodeStateAsUpdate(ydoc)
+  localStorage.setItem('state', JSON.stringify({state: state_encoded}))
+  localStorage.setItem('serial', id.toString())
+}
+
+// tries to restore state from local storage
+function restoreState() {
+  const item = localStorage.getItem('state')
+  if (item !== null) {
+    console.log('restoring state', item)
+    const state = JSON.parse(item).state
+    Y.applyUpdate(ydoc, state)
+  } else {
+    throw new Error('no state to restore')
+  }
+}
+
+// receive an update from another client over deltachat
 function receiveUpdate(update: ReceivedStatusUpdate<Payload>) {
-  // eslint-disable-next-line no-console
-  if (update.payload.sender !== window.webxdc.selfAddr)
-    Y.applyUpdate(ydoc, update.payload.update)
+  if (update.payload.sender !== window.webxdc.selfAddr){
+    for (const ydoc_update of update.payload.updates) {
+      Y.applyUpdate(ydoc, ydoc_update)
+    }
+    saveState(Y.encodeStateAsUpdate(ydoc), update.serial)
+  }
 }
-
 
 onMounted(() => {
   const editor = document.querySelector('#editor')!
-
   // @ts-expect-error 'hi'
   const t = new EditorView(editor, {
     state: EditorState.create({
@@ -49,7 +86,15 @@ onMounted(() => {
       ].concat(exampleSetup({ schema })),
     }),
   })
-  window.webxdc.setUpdateListener(receiveUpdate, 0)
+
+  const latest_serial = localStorage.getItem('serial')
+  if (latest_serial !== null) {
+    restoreState()
+    window.webxdc.setUpdateListener(receiveUpdate, parseInt(latest_serial))
+  } else {
+    window.webxdc.setUpdateListener(receiveUpdate, 0)
+  }
+
 })
 </script>
 
@@ -63,7 +108,6 @@ div
 </template>
 
 <style lang="sass">
-
 table.vgt-table td
   padding: 2px !important
 
