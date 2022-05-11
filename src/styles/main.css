@@ -1,12 +1,34 @@
+:root {
+  --editor: #9e875f;
+  --bg: #665537;
+  --font: #fff;
+  --font-dark: #ffefd2;
+}
+
 html,
 body,
 #app {
-  background: #fff;
   height: 100%;
   margin: 0;
   padding: 0;
 }
 
-html.dark {
-  background: #121212;
+
+.dark #app {
+  background: var(--bg);
+  color: var(--font)
+}
+
+.dark .ProseMirror-menu-active {
+  background: #665537;
+}
+
+.dark .ProseMirror-menubar {
+  background: var(--editor);
+  color: var(--font-dark)
+
+}
+
+.dark #editor {
+  background: var(--editor);
 }
