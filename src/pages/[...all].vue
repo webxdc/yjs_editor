@@ -31,15 +31,15 @@ let timeOut: NodeJS.Timeout
 
 
 // this gets called every keystroke
-ydoc.on('update', (update, _, doc) => {  
+ydoc.on('update', (update, _, doc) => {
   if (initialized && !skip_sending) {
     updates.push(update)
     if (timeOut) {
       clearTimeout(timeOut)
-    }    
+    }
     timeOut = setTimeout(() => sendUpdate(updates), 1000)
   }
-  else{ 
+  else {
     console.log('skipping resend');
   };
   skip_sending = false
@@ -48,23 +48,23 @@ ydoc.on('update', (update, _, doc) => {
 // actually sends the collected updates through deltachet
 function sendUpdate(updates: Uint8Array[]) {
   console.log('sending update:');
-  window.webxdc.sendUpdate({ 
-    payload: { 
-      updates, 
-      sender: 
-      unique_id 
-      }, 
-      summary: prosemirror.state.doc.content.firstChild!.textContent
-      }, 
+  window.webxdc.sendUpdate({
+    payload: {
+      updates,
+      sender:
+        unique_id
+    },
+    summary: prosemirror.state.doc.content.firstChild!.textContent
+  },
     '')
 }
 
 // saves the state of the editor and last seen serual number to local storage
 function saveState(id: number) {
   console.log('saving state');
-  
+
   const state_encoded = Y.encodeStateAsUpdate(ydoc)
-  localStorage.setItem('state', JSON.stringify({state: state_encoded}))
+  localStorage.setItem('state', JSON.stringify({ state: state_encoded }))
   localStorage.setItem('serial', id.toString())
 }
 
@@ -81,8 +81,8 @@ function restoreState() {
 
 // receive an update from another client over deltachat
 function receiveUpdate(update: ReceivedStatusUpdate<Payload>) {
-  if (update.payload.sender !== unique_id){
-    console.log('applying update')  
+  if (update.payload.sender !== unique_id) {
+    console.log('applying update')
     for (const ydoc_update of update.payload.updates) {
       skip_sending = true
       Y.applyUpdate(ydoc, ydoc_update)
@@ -114,12 +114,12 @@ onMounted(() => {
   console.log('latest serial', latest_serial)
   if (latest_serial !== null) {
     console.log('restoring state');
-    
+
     restoreState()
     window.webxdc.setUpdateListener(receiveUpdate, parseInt(latest_serial)).then(() => {
       initialized = true
     })
-  } else {    
+  } else {
     window.webxdc.setUpdateListener(receiveUpdate, 0).then(() => {
       initialized = true
     })
