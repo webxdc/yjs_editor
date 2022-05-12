@@ -29,11 +29,12 @@ const unique_id = window.webxdc.selfAddr + Date.now()
 
 // collect many updates from yjs for debouncing
 const updates: Ref<Uint8Array[]> = ref([])
-const DEBOUNCE_TIME = 5000 // this is 10 secs
+const DEBOUNCE_TIME = 5000
 let timeOut: NodeJS.Timeout
 
 // this gets called on every keystroke
 ydoc.on('update', (update) => {
+  saveState()
   if (initialized && !skip_sending) {
     updates.value.push(update)
     if (timeOut) {
@@ -50,10 +51,14 @@ ydoc.on('update', (update) => {
 // actually sends the collected updates with deltachet
 function sendUpdate() {
   if (updates.value.length > 0) {
-    console.log('sending update:');
+    console.log('sending update:',{
+        updates: Object.assign({}, updates.value),
+        sender:
+          unique_id
+      },);
     window.webxdc.sendUpdate({
       payload: {
-        updates: updates.value,
+        updates: Object.assign([], updates.value),
         sender:
           unique_id
       },
@@ -65,12 +70,15 @@ function sendUpdate() {
   }
 }
 
+function updateSerial(new_serial: number) {
+  localStorage.setItem('serial', new_serial.toString())
+}
+
 // saves the state of the editor and last seen serial number to local storage
-function saveState(id: number) {
+function saveState() {
   console.log('saving state');
   const state_encoded = Y.encodeStateAsUpdate(ydoc)
   localStorage.setItem('state', JSON.stringify({ state: state_encoded }))
-  localStorage.setItem('serial', id.toString())
 }
 
 // tries to restore state from local storage
@@ -87,18 +95,18 @@ function restoreState() {
 // receive an update from another client over deltachat
 function receiveUpdate(update: ReceivedStatusUpdate<Payload>) {
   if (update.payload.sender !== unique_id) {
-    console.log('applying update')
+    console.log('applying update', update.payload.updates);
     for (const ydoc_update of update.payload.updates) {
       skip_sending = true
       Y.applyUpdate(ydoc, ydoc_update)
     }
   }
-  saveState(update.serial)
+  updateSerial(update.serial)
+  saveState()
 }
 
 let menuBarRef = ref()
 onMounted(() => {
-
   const editor = document.querySelector('#editor')!
   // @ts-expect-error 'hi'
   prosemirror = new EditorView(editor, {
@@ -155,7 +163,6 @@ div
 </template>
 
 <style>
-/* we will explain what these classes do next! */
 .v-enter-active,
 .v-leave-active {
   transition: opacity 0.2s ease;
