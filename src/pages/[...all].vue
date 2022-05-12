@@ -19,6 +19,8 @@ interface Payload {
 
 const ydoc = new Y.Doc()
 let initialized = false
+let skip_sending = false
+const unique_id = window.webxdc.selfAddr + Date.now()
 const type = ydoc.getXmlFragment('prosemirror')
 
 // collect many updates from yjs for debouncing
@@ -27,9 +29,8 @@ let timeOut: NodeJS.Timeout
 
 
 // this gets called every keystroke
-ydoc.on('update', (update, _, doc) => {
-  
-  if (initialized) {
+ydoc.on('update', (update, _, doc) => {  
+  if (initialized && !skip_sending) {
     updates.push(update)
     if (timeOut) {
       clearTimeout(timeOut)
@@ -39,12 +40,13 @@ ydoc.on('update', (update, _, doc) => {
   else{ 
     console.log('skipping resend');
   }
+  skip_sending = false
 })
 
 // actually sends the collected updates through deltachet
 function sendUpdate(updates: Uint8Array[]) {
   console.log('sending update:');
-  window.webxdc.sendUpdate({ payload: { updates, sender: window.webxdc.selfAddr }}, '')
+  window.webxdc.sendUpdate({ payload: { updates, sender: unique_id }}, '')
 }
 
 // saves the state of the editor and last seen serual number to local storage
@@ -69,9 +71,10 @@ function restoreState() {
 
 // receive an update from another client over deltachat
 function receiveUpdate(update: ReceivedStatusUpdate<Payload>) {
-  if (update.payload.sender !== window.webxdc.selfAddr){
+  if (update.payload.sender !== unique_id){
     console.log('applying update')  
     for (const ydoc_update of update.payload.updates) {
+      skip_sending = true
       Y.applyUpdate(ydoc, ydoc_update)
     }
   }
