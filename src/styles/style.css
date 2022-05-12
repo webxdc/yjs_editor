@@ -363,7 +363,6 @@ placeholder {
   #editor, .editor {
     background-clip: padding-box;
     border-radius: 4px;
-    border: 2px solid rgba(0, 0, 0, 0.2);
     padding: 5px 0;
     margin-bottom: 23px;
   }
@@ -384,5 +383,5 @@ placeholder {
     outline: none;
   }
   
-  .ProseMirror p { margin-bottom: 1em }
+  .ProseMirror p { margin-bottom: 0.2em }
   
