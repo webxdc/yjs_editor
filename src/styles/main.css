@@ -41,6 +41,20 @@ p {
   margin-bottom: 0.2rem;
 }
 
+.ProseMirror-menubar-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+div[title="Select parent node"] {
+  display: none;
+}
+
+.ProseMirror {
+  height: 100%
+}
+
 .dark #app {
   background: var(--bg);
   color: var(--font)
