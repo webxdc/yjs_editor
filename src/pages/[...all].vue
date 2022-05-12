@@ -148,7 +148,8 @@ div
   teleport(v-if="menuBarRef" :to="menuBarRef" )
     span.float-right.flex.items-center.h-full
       transition-group
-        button.mr-2.bg-gray-200.rounded.leading-none.p-1#sync(key="1" v-if="updates.length != 0" @click="sendUpdate") sync
+        button.mr-2.bg-gray-200.rounded.leading-none.p-1#sync(key="1" v-if="updates.length != 0" @click="sendUpdate")
+          span(i="carbon-send")
         button(@click="() => toggleDark()" key="2")
           div(i="carbon-sun dark:carbon-moon")
 </template>

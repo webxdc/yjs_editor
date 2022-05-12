@@ -1,6 +1,6 @@
 :root {
-  --editor: #9e875f;
-  --bg: #665537;
+  --editor: #152143;
+  --bg: #2e4481;
   --font: #fff;
   --font-dark: #ffefd2;
 }
@@ -64,7 +64,7 @@ div[title="Select parent node"] {
 }
 
 .dark .ProseMirror-menu-active {
-  background: #665537;
+  background: var(--bg);
 }
 
 .ProseMirror-menubar {
@@ -74,8 +74,7 @@ div[title="Select parent node"] {
 
 .dark .ProseMirror-menubar {
   background: var(--editor);
-  color: var(--font-dark)
-
+  color: white
 }
 
 .dark #editor {
