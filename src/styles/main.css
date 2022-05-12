@@ -23,6 +23,11 @@ body,
   background: #665537;
 }
 
+.ProseMirror-menubar {
+  background: white;
+}
+
+
 .dark .ProseMirror-menubar {
   background: var(--editor);
   color: var(--font-dark)

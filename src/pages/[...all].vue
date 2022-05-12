@@ -10,7 +10,6 @@ import { keymap } from 'prosemirror-keymap'
 import type { ReceivedStatusUpdate } from 'webxdc'
 import { schema } from '~/schema'
 import '~/styles/style.css'
-import {toggleDark} from '~/composables/dark'
 
 
 interface Payload {
@@ -114,9 +113,6 @@ onMounted(() => {
 <template lang="pug">
 div
   div.flex.justify-between
-    h1.text-2xl.leading-none.mb-1 Cooperative editing
-    button(@click="() => toggleDark()")
-      div(i="carbon-sun dark:carbon-moon")
   div(id="editor" class="dark:bg-red")
 </template>
 

@@ -39,86 +39,10 @@ export const nodes = {
     toDOM(node) { return ['blockquote', calcYchangeDomAttrs(node.attrs), 0] },
   },
 
-  // :: NodeSpec A horizontal rule (`<hr>`).
-  horizontal_rule: {
-    attrs: { ychange: { default: null } },
-    group: 'block',
-    parseDOM: [{ tag: 'hr' }],
-    toDOM(node) {
-      return ['hr', calcYchangeDomAttrs(node.attrs)]
-    },
-  },
-
-  // :: NodeSpec A heading textblock, with a `level` attribute that
-  // should hold the number 1 to 6. Parsed and serialized as `<h1>` to
-  // `<h6>` elements.
-  heading: {
-    attrs: {
-      level: { default: 1 },
-      ychange: { default: null },
-    },
-    content: 'inline*',
-    group: 'block',
-    defining: true,
-    parseDOM: [{ tag: 'h1', attrs: { level: 1 } },
-      { tag: 'h2', attrs: { level: 2 } },
-      { tag: 'h3', attrs: { level: 3 } },
-      { tag: 'h4', attrs: { level: 4 } },
-      { tag: 'h5', attrs: { level: 5 } },
-      { tag: 'h6', attrs: { level: 6 } }],
-    toDOM(node) { return [`h${node.attrs.level}`, calcYchangeDomAttrs(node.attrs), 0] },
-  },
-
-  // :: NodeSpec A code listing. Disallows marks or non-text inline
-  // nodes by default. Represented as a `<pre>` element with a
-  // `<code>` element inside of it.
-  code_block: {
-    attrs: { ychange: { default: null } },
-    content: 'text*',
-    marks: '',
-    group: 'block',
-    code: true,
-    defining: true,
-    parseDOM: [{ tag: 'pre', preserveWhitespace: 'full' }],
-    toDOM(node) { return ['pre', calcYchangeDomAttrs(node.attrs), ['code', 0]] },
-  },
 
   // :: NodeSpec The text node.
   text: {
     group: 'inline',
-  },
-
-  // :: NodeSpec An inline image (`<img>`) node. Supports `src`,
-  // `alt`, and `href` attributes. The latter two default to the empty
-  // string.
-  image: {
-    inline: true,
-    attrs: {
-      ychange: { default: null },
-      src: {},
-      alt: { default: null },
-      title: { default: null },
-    },
-    group: 'inline',
-    draggable: true,
-    parseDOM: [{
-      tag: 'img[src]',
-      getAttrs(dom) {
-        return {
-          src: dom.getAttribute('src'),
-          title: dom.getAttribute('title'),
-          alt: dom.getAttribute('alt'),
-        }
-      },
-    }],
-    toDOM(node) {
-      const domAttrs = {
-        src: node.attrs.src,
-        title: node.attrs.title,
-        alt: node.attrs.alt,
-      }
-      return ['img', calcYchangeDomAttrs(node.attrs, domAttrs)]
-    },
   },
 
   // :: NodeSpec A hard line break, represented in the DOM as `<br>`.
@@ -135,24 +59,6 @@ const emDOM = ['em', 0]; const strongDOM = ['strong', 0]; const codeDOM = ['code
 
 // :: Object [Specs](#model.MarkSpec) for the marks in the schema.
 export const marks = {
-  // :: MarkSpec A link. Has `href` and `title` attributes. `title`
-  // defaults to the empty string. Rendered and parsed as an `<a>`
-  // element.
-  link: {
-    attrs: {
-      href: {},
-      title: { default: null },
-    },
-    inclusive: false,
-    parseDOM: [{
-      tag: 'a[href]',
-      getAttrs(dom) {
-        return { href: dom.getAttribute('href'), title: dom.getAttribute('title') }
-      },
-    }],
-    toDOM(node) { return ['a', node.attrs, 0] },
-  },
-
   // :: MarkSpec An emphasis mark. Rendered as an `<em>` element.
   // Has parse rules that also match `<i>` and `font-style: italic`.
   em: {
