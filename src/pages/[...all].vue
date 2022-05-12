@@ -49,6 +49,8 @@ function sendUpdate(updates: Uint8Array[]) {
 
 // saves the state of the editor and last seen serual number to local storage
 function saveState(id: number) {
+  console.log('saving state');
+  
   const state_encoded = Y.encodeStateAsUpdate(ydoc)
   localStorage.setItem('state', JSON.stringify({state: state_encoded}))
   localStorage.setItem('serial', id.toString())
@@ -58,7 +60,6 @@ function saveState(id: number) {
 function restoreState() {
   const item = localStorage.getItem('state')
   if (item !== null) {
-    console.log('restoring state', item)
     const state = JSON.parse(item).state
     Y.applyUpdate(ydoc, state)
   } else {
@@ -73,8 +74,8 @@ function receiveUpdate(update: ReceivedStatusUpdate<Payload>) {
     for (const ydoc_update of update.payload.updates) {
       Y.applyUpdate(ydoc, ydoc_update)
     }
-    saveState(update.serial)
   }
+  saveState(update.serial)
 }
 
 onMounted(() => {
@@ -96,12 +97,15 @@ onMounted(() => {
   })
 
   const latest_serial = localStorage.getItem('serial')
+  console.log('latest serial', latest_serial)
   if (latest_serial !== null) {
+    console.log('restoring state');
+    
     restoreState()
     window.webxdc.setUpdateListener(receiveUpdate, parseInt(latest_serial)).then(() => {
       initialized = true
     })
-  } else {
+  } else {    
     window.webxdc.setUpdateListener(receiveUpdate, 0).then(() => {
       initialized = true
     })
