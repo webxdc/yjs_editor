@@ -54,6 +54,9 @@ div[title="Select parent node"] {
 .ProseMirror {
   height: 100%
 }
+.dark #sync {
+  background: var(--bg);
+}
 
 .dark #app {
   background: var(--bg);

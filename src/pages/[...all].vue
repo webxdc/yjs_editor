@@ -12,6 +12,7 @@ import { schema } from '~/schema'
 import '~/styles/style.css'
 import { Schema } from 'prosemirror-model'
 import type { Ref } from 'vue'
+import {toggleDark} from '~/composables/dark'
 
 interface Payload {
   updates: any[]
@@ -141,6 +142,23 @@ onMounted(() => {
 <template lang="pug">
 div
   div(id="editor" class="dark:bg-red")
-  teleport(v-if="menuBarRef" :to="menuBarRef" ) 
-    span(v-if="updates.length != 0") sync
+  teleport(v-if="menuBarRef" :to="menuBarRef" )
+    span.float-right.flex.items-center.h-full
+      transition-group
+        button.mr-2.bg-gray-200.rounded.leading-none.p-1#sync(v-if="updates.length != 0") sync
+        button(@click="() => toggleDark()")
+          div(i="carbon-sun dark:carbon-moon")
 </template>
+
+<style>
+/* we will explain what these classes do next! */
+.v-enter-active,
+.v-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.v-enter-from,
+.v-leave-to {
+  opacity: 0;
+}
+</style>
