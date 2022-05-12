@@ -11,7 +11,7 @@ import type { ReceivedStatusUpdate } from 'webxdc'
 import { schema } from '~/schema'
 import '~/styles/style.css'
 import { Schema } from 'prosemirror-model'
-
+import type { Ref } from 'vue'
 
 interface Payload {
   updates: any[]
@@ -19,25 +19,26 @@ interface Payload {
 }
 
 const ydoc = new Y.Doc()
-let initialized = false
-let skip_sending = false
 let prosemirror: EditorView<Schema<"blockquote" | "text" | "doc" | "paragraph" | "heading" | "hard_break", "code" | "em" | "strong" | "ychange">>
-const unique_id = window.webxdc.selfAddr + Date.now()
 const type = ydoc.getXmlFragment('prosemirror')
 
+let initialized = false
+let skip_sending = false
+const unique_id = window.webxdc.selfAddr + Date.now()
+
 // collect many updates from yjs for debouncing
-const updates: Uint8Array[] = []
+const updates: Ref<Uint8Array[]> = ref([])
+const DEBOUNCE_TIME = 10000 // this is 10 secs
 let timeOut: NodeJS.Timeout
 
-
-// this gets called every keystroke
+// this gets called on every keystroke
 ydoc.on('update', (update, _, doc) => {
   if (initialized && !skip_sending) {
-    updates.push(update)
+    updates.value.push(update)
     if (timeOut) {
       clearTimeout(timeOut)
     }
-    timeOut = setTimeout(() => sendUpdate(updates), 1000)
+    timeOut = setTimeout(sendUpdate, DEBOUNCE_TIME)
   }
   else {
     console.log('skipping resend');
@@ -45,24 +46,24 @@ ydoc.on('update', (update, _, doc) => {
   skip_sending = false
 })
 
-// actually sends the collected updates through deltachet
-function sendUpdate(updates: Uint8Array[]) {
+// actually sends the collected updates with deltachet
+function sendUpdate() {
   console.log('sending update:');
   window.webxdc.sendUpdate({
     payload: {
-      updates,
+      updates: updates.value,
       sender:
         unique_id
     },
     summary: prosemirror.state.doc.content.firstChild!.textContent
   },
     '')
+  updates.value = []
 }
 
-// saves the state of the editor and last seen serual number to local storage
+// saves the state of the editor and last seen serial number to local storage
 function saveState(id: number) {
   console.log('saving state');
-
   const state_encoded = Y.encodeStateAsUpdate(ydoc)
   localStorage.setItem('state', JSON.stringify({ state: state_encoded }))
   localStorage.setItem('serial', id.toString())
@@ -91,7 +92,9 @@ function receiveUpdate(update: ReceivedStatusUpdate<Payload>) {
   saveState(update.serial)
 }
 
+let menuBarRef = ref()
 onMounted(() => {
+
   const editor = document.querySelector('#editor')!
   // @ts-expect-error 'hi'
   prosemirror = new EditorView(editor, {
@@ -109,6 +112,14 @@ onMounted(() => {
     }),
   })
 
+  menuBarRef.value = document.getElementsByClassName('ProseMirror-menubar')[0]
+
+  window.addEventListener("undload", () => {
+    if (updates.value.length > 0) {
+      console.log('automatic sending of queued updates before close');
+      sendUpdate()
+    }
+  })
 
   const latest_serial = localStorage.getItem('serial')
   console.log('latest serial', latest_serial)
@@ -124,29 +135,12 @@ onMounted(() => {
       initialized = true
     })
   }
-
 })
 </script>
 
 <template lang="pug">
 div
-  div.flex.justify-between
   div(id="editor" class="dark:bg-red")
+  teleport(v-if="menuBarRef" :to="menuBarRef" ) 
+    span(v-if="updates.length != 0") sync
 </template>
-
-<style lang="sass">
-table.vgt-table td
-  padding: 2px !important
-
-thead
-  display: none
-
-.vgt-right-align
-  text-align: left !important
-
-.vgt-global-search__input
-  padding-left: 5px !important
-
-.magnifying-glass
-  display: none !important
-</style>
