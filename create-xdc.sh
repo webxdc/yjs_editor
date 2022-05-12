@@ -16,7 +16,7 @@ esac
 rm "$PACKAGE_NAME.xdc" 2> /dev/null
 cd dist
 zip -9 --recurse-paths "$PACKAGE_NAME.xdc" * "*.sh" "*.xdc"
-mv *.xdc /home/septias/Downloads/
+mv *.xdc ../
 
 echo "success, archive contents:"
 
