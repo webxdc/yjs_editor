@@ -115,7 +115,7 @@ onMounted(() => {
 
   menuBarRef.value = document.getElementsByClassName('ProseMirror-menubar')[0]
 
-  window.addEventListener("undload", () => {
+  window.addEventListener("unload", () => {
     if (updates.value.length > 0) {
       console.log('automatic sending of queued updates before close');
       sendUpdate()
