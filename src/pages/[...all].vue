@@ -10,6 +10,7 @@ import { keymap } from 'prosemirror-keymap'
 import type { ReceivedStatusUpdate } from 'webxdc'
 import { schema } from '~/schema'
 import '~/styles/style.css'
+import { Schema } from 'prosemirror-model'
 
 
 interface Payload {
@@ -20,6 +21,7 @@ interface Payload {
 const ydoc = new Y.Doc()
 let initialized = false
 let skip_sending = false
+let prosemirror: EditorView<Schema<"blockquote" | "text" | "doc" | "paragraph" | "heading" | "hard_break", "code" | "em" | "strong" | "ychange">>
 const unique_id = window.webxdc.selfAddr + Date.now()
 const type = ydoc.getXmlFragment('prosemirror')
 
@@ -39,14 +41,22 @@ ydoc.on('update', (update, _, doc) => {
   }
   else{ 
     console.log('skipping resend');
-  }
+  };
   skip_sending = false
 })
 
 // actually sends the collected updates through deltachet
 function sendUpdate(updates: Uint8Array[]) {
   console.log('sending update:');
-  window.webxdc.sendUpdate({ payload: { updates, sender: unique_id }}, '')
+  window.webxdc.sendUpdate({ 
+    payload: { 
+      updates, 
+      sender: 
+      unique_id 
+      }, 
+      summary: prosemirror.state.doc.content.firstChild!.textContent
+      }, 
+    '')
 }
 
 // saves the state of the editor and last seen serual number to local storage
@@ -84,7 +94,7 @@ function receiveUpdate(update: ReceivedStatusUpdate<Payload>) {
 onMounted(() => {
   const editor = document.querySelector('#editor')!
   // @ts-expect-error 'hi'
-  const t = new EditorView(editor, {
+  prosemirror = new EditorView(editor, {
     state: EditorState.create({
       schema,
       plugins: [
@@ -98,6 +108,7 @@ onMounted(() => {
       ].concat(exampleSetup({ schema })),
     }),
   })
+
 
   const latest_serial = localStorage.getItem('serial')
   console.log('latest serial', latest_serial)
