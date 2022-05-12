@@ -29,7 +29,7 @@ const unique_id = window.webxdc.selfAddr + Date.now()
 
 // collect many updates from yjs for debouncing
 const updates: Ref<Uint8Array[]> = ref([])
-const DEBOUNCE_TIME = 10000 // this is 10 secs
+const DEBOUNCE_TIME = 5000 // this is 10 secs
 let timeOut: NodeJS.Timeout
 
 // this gets called on every keystroke
