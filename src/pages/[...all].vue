@@ -12,7 +12,7 @@ import { schema } from '~/schema'
 import '~/styles/style.css'
 import { Schema } from 'prosemirror-model'
 import type { Ref } from 'vue'
-import {toggleDark} from '~/composables/dark'
+import { toggleDark } from '~/composables/dark'
 
 interface Payload {
   updates: any[]
@@ -33,7 +33,7 @@ const DEBOUNCE_TIME = 5000 // this is 10 secs
 let timeOut: NodeJS.Timeout
 
 // this gets called on every keystroke
-ydoc.on('update', (update, _, doc) => {
+ydoc.on('update', (update) => {
   if (initialized && !skip_sending) {
     updates.value.push(update)
     if (timeOut) {
@@ -49,17 +49,20 @@ ydoc.on('update', (update, _, doc) => {
 
 // actually sends the collected updates with deltachet
 function sendUpdate() {
-  console.log('sending update:');
-  window.webxdc.sendUpdate({
-    payload: {
-      updates: updates.value,
-      sender:
-        unique_id
+  if (updates.value.length > 0) {
+    console.log('sending update:');
+    window.webxdc.sendUpdate({
+      payload: {
+        updates: updates.value,
+        sender:
+          unique_id
+      },
+      summary: prosemirror.state.doc.content.firstChild!.textContent
     },
-    summary: prosemirror.state.doc.content.firstChild!.textContent
-  },
-    '')
-  updates.value = []
+      '')
+
+    updates.value = []
+  }
 }
 
 // saves the state of the editor and last seen serial number to local storage
