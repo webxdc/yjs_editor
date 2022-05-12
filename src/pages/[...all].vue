@@ -19,29 +19,37 @@ interface Payload {
 }
 
 const ydoc = new Y.Doc()
+let initialized = false
 const type = ydoc.getXmlFragment('prosemirror')
 
-// collect many updates from yjs for debounceing
+// collect many updates from yjs for debouncing
 const updates: Uint8Array[] = []
 let timeOut: NodeJS.Timeout
 
+
 // this gets called every keystroke
-ydoc.on('update', (update) => {  
-  updates.push(update)
-  if (timeOut) {
-    clearTimeout(timeOut)
+ydoc.on('update', (update, _, doc) => {
+  
+  if (initialized) {
+    updates.push(update)
+    if (timeOut) {
+      clearTimeout(timeOut)
+    }    
+    timeOut = setTimeout(() => sendUpdate(updates), 1000)
   }
-  timeOut = setTimeout(() => sendUpdate(updates), 3000)
+  else{ 
+    console.log('skipping resend');
+  }
 })
 
 // actually sends the collected updates through deltachet
 function sendUpdate(updates: Uint8Array[]) {
-  console.log('sending update');
+  console.log('sending update:');
   window.webxdc.sendUpdate({ payload: { updates, sender: window.webxdc.selfAddr }}, '')
 }
 
-// saves the state of the editor and last seen sequence number to local storage
-function saveState(state: Uint8Array, id: number) {
+// saves the state of the editor and last seen serual number to local storage
+function saveState(id: number) {
   const state_encoded = Y.encodeStateAsUpdate(ydoc)
   localStorage.setItem('state', JSON.stringify({state: state_encoded}))
   localStorage.setItem('serial', id.toString())
@@ -62,10 +70,11 @@ function restoreState() {
 // receive an update from another client over deltachat
 function receiveUpdate(update: ReceivedStatusUpdate<Payload>) {
   if (update.payload.sender !== window.webxdc.selfAddr){
+    console.log('applying update')  
     for (const ydoc_update of update.payload.updates) {
       Y.applyUpdate(ydoc, ydoc_update)
     }
-    saveState(Y.encodeStateAsUpdate(ydoc), update.serial)
+    saveState(update.serial)
   }
 }
 
@@ -90,9 +99,13 @@ onMounted(() => {
   const latest_serial = localStorage.getItem('serial')
   if (latest_serial !== null) {
     restoreState()
-    window.webxdc.setUpdateListener(receiveUpdate, parseInt(latest_serial))
+    window.webxdc.setUpdateListener(receiveUpdate, parseInt(latest_serial)).then(() => {
+      initialized = true
+    })
   } else {
-    window.webxdc.setUpdateListener(receiveUpdate, 0)
+    window.webxdc.setUpdateListener(receiveUpdate, 0).then(() => {
+      initialized = true
+    })
   }
 
 })
