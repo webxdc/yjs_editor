@@ -51,11 +51,6 @@ ydoc.on('update', (update) => {
 // actually sends the collected updates with deltachet
 function sendUpdate() {
   if (updates.value.length > 0) {
-    console.log('sending update:',{
-        updates: Object.assign({}, updates.value),
-        sender:
-          unique_id
-      },);
     window.webxdc.sendUpdate({
       payload: {
         updates: Object.assign([], updates.value),
