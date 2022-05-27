@@ -1,6 +1,9 @@
 # yjs_editor
 This tool uses yjs (A CRDT tool), Deltachat and Vuejs to provide a WYSIWYG editor which can be used right out of deltachat.
 
+<img width=200 src=https://user-images.githubusercontent.com/9800740/170771692-4f7c5d88-b5da-498d-9767-889de139d997.png>
+
+
 ## Technical Details
 - Vuejs
 - Prosemirror
