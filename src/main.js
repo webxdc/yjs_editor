@@ -1,115 +1,62 @@
-<script setup lang="ts">
+//@ts-check
 import * as Y from 'yjs'
-import { redo, undo, ySyncPlugin } from 'y-prosemirror'
+import { redo, undo, ySyncPlugin, yUndoPlugin } from 'y-prosemirror'
 import { EditorState } from 'prosemirror-state'
 import { EditorView } from 'prosemirror-view'
-// @ts-expect-error 'yeet'
 import { exampleSetup } from 'prosemirror-example-setup'
-// @ts-expect-error 'yeet'
 import { keymap } from 'prosemirror-keymap'
-import type { ReceivedStatusUpdate } from 'webxdc'
-import { schema } from '~/schema'
-import '~/styles/style.css'
-import { Schema } from 'prosemirror-model'
-import type { Ref } from 'vue'
-import { toggleDark } from '~/composables/dark'
+import { schema } from './schema'
+import './styles/main.css'
+import './styles/style.css'
+import { WebxdcSyncProvider } from 'webxdc-yjs-provider';
 
-interface Payload {
-  updates: any[]
-  sender: string
-}
+// Currently there is no UI to toggle this.
+const manualSend = localStorage.getItem('manualSend') !== 'false';
 
 const ydoc = new Y.Doc()
-let prosemirror: EditorView<Schema<"blockquote" | "text" | "doc" | "paragraph" | "heading" | "hard_break", "code" | "em" | "strong" | "ychange">>
+/** @type {ReturnType<typeof createEditor>} */
+let prosemirror
 const type = ydoc.getXmlFragment('prosemirror')
 
-let initialized = false
-let skip_sending = false
-const unique_id = window.webxdc.selfAddr + Date.now()
+const provider = new WebxdcSyncProvider(ydoc);
+if (manualSend) {
+  // Updates are to be sent with the "sync" button.
+  provider.onNeedToSendLocalUpdates = () => {};
+}
 
-// collect many updates from yjs for debouncing
-const updates: Ref<Uint8Array[]> = ref([])
-const DEBOUNCE_TIME = 5000
-let timeOut: NodeJS.Timeout
+addEventListener("DOMContentLoaded", () => {
+  /** @type {HTMLDivElement} */
+  const editor = document.querySelector('#editor')
+  prosemirror = createEditor(editor);
 
-// this gets called on every keystroke
-ydoc.on('update', (update) => {
-  saveState()
-  if (initialized && !skip_sending) {
-    updates.value.push(update)
-    if (timeOut) {
-      clearTimeout(timeOut)
-    }
-    timeOut = setTimeout(sendUpdate, DEBOUNCE_TIME)
+  if (!manualSend) {
+    // TODO improvement: detach the listener when there are no pending changes?
+    // Or is that unnecessary for this event? I heard stuff about
+    // back/forward cache.
+    // TODO fix: this does not get executed in the current version of
+    // Delta Chat Desktop.
+    window.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") {
+        provider.sendUnsentLocalUpdates();
+      }
+    });
   }
-  else {
-    console.log('skipping resend');
-  };
-  skip_sending = false
+  // TODO maybe add `else` with `beforeunload` listener that prevents the close
+  // if there are unsaved changes.
+
+  initExtraButtons();
 })
 
-// actually sends the collected updates with deltachet
-function sendUpdate() {
-  if (updates.value.length > 0) {
-    window.webxdc.sendUpdate({
-      payload: {
-        updates: Object.assign([], updates.value),
-        sender:
-          unique_id
-      },
-      summary: prosemirror.state.doc.content.firstChild!.textContent
-    },
-      '')
-
-    updates.value = []
-  }
-}
-
-function updateSerial(new_serial: number) {
-  localStorage.setItem('serial', new_serial.toString())
-}
-
-// saves the state of the editor and last seen serial number to local storage
-function saveState() {
-  console.log('saving state');
-  const state_encoded = Y.encodeStateAsUpdate(ydoc)
-  localStorage.setItem('state', JSON.stringify({ state: state_encoded }))
-}
-
-// tries to restore state from local storage
-function restoreState() {
-  const item = localStorage.getItem('state')
-  if (item !== null) {
-    const state = JSON.parse(item).state
-    Y.applyUpdate(ydoc, state)
-  } else {
-    throw new Error('no state to restore')
-  }
-}
-
-// receive an update from another client over deltachat
-function receiveUpdate(update: ReceivedStatusUpdate<Payload>) {
-  if (update.payload.sender !== unique_id) {
-    console.log('applying update', update.payload.updates);
-    for (const ydoc_update of update.payload.updates) {
-      skip_sending = true
-      Y.applyUpdate(ydoc, ydoc_update)
-    }
-  }
-  updateSerial(update.serial)
-  saveState()
-}
-
-let menuBarRef = ref()
-onMounted(() => {
-  const editor = document.querySelector('#editor')!
-  // @ts-expect-error 'hi'
-  prosemirror = new EditorView(editor, {
+/**
+ * @param {HTMLElement} element
+ */
+function createEditor(element) {
+  return new EditorView(editor, {
     state: EditorState.create({
       schema,
       plugins: [
-        //yUndoPlugin(),
         ySyncPlugin(type),
+        yUndoPlugin(),
         keymap({
           'Mod-z': undo,
           'Mod-y': redo,
@@ -117,54 +64,26 @@ onMounted(() => {
         }),
       ].concat(exampleSetup({ schema })),
     }),
-  })
-
-  menuBarRef.value = document.getElementsByClassName('ProseMirror-menubar')[0]
-
-  window.addEventListener("unload", () => {
-    if (updates.value.length > 0) {
-      console.log('automatic sending of queued updates before close');
-      sendUpdate()
-    }
-  })
-
-  const latest_serial = localStorage.getItem('serial')
-  console.log('latest serial', latest_serial)
-  if (latest_serial !== null) {
-    console.log('restoring state');
-
-    restoreState()
-    window.webxdc.setUpdateListener(receiveUpdate, parseInt(latest_serial)).then(() => {
-      initialized = true
-    })
-  } else {
-    window.webxdc.setUpdateListener(receiveUpdate, 0).then(() => {
-      initialized = true
-    })
-  }
-})
-</script>
-
-<template lang="pug">
-div
-  div(id="editor" class="dark:bg-red")
-  teleport(v-if="menuBarRef" :to="menuBarRef" )
-    span.float-right.flex.items-center.h-full
-      transition-group
-        button.mr-2.bg-gray-200.rounded.leading-none.p-1#sync(key="1" v-if="updates.length != 0" @click="sendUpdate")
-          span(i="carbon-send")
-        button(@click="() => toggleDark()" key="2")
-          div(i="carbon-sun dark:carbon-moon")
-</template>
-
-<style>
-.v-enter-active,
-.v-leave-active {
-  transition: opacity 0.2s ease;
+  });
 }
 
-.v-enter-from,
-.v-leave-to {
-  opacity: 0;
+function initExtraButtons() {
+  const extraButtonsWrapper = /** @type {HTMLSpanElement} */
+    (document.getElementById('extra-buttons'));
+  const menuBar = document.getElementsByClassName('ProseMirror-menubar')[0];
+  menuBar.appendChild(extraButtonsWrapper);
+  extraButtonsWrapper.style.display = '';
+
+  const themeButton = /** @type {HTMLButtonElement} */
+    (document.getElementById('theme'));
+  themeButton.addEventListener('click', () => {
+    document.documentElement.classList.toggle('dark');
+  })
+
+  const syncButton = /** @type {HTMLButtonElement} */
+    (document.getElementById('sync'));
+  syncButton.addEventListener('click', () => {
+    provider.sendUnsentLocalUpdates();
+  });
+  // TODO remove the button when there are no unsaved changes?
 }
-</style>

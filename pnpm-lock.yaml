@@ -11,6 +11,7 @@ specifiers:
   prosemirror-state: ^1.3.4
   prosemirror-view: ^1.23.13
   vite: ^2.9.8
+  webxdc-yjs-provider: ^3.0.1
   y-prosemirror: ^1.0.19
   y-protocols: ^1.0.5
   yjs: ^13.5.36
@@ -22,6 +23,7 @@ dependencies:
   prosemirror-state: 1.3.4
   prosemirror-view: 1.23.13
   vite: 2.9.16
+  webxdc-yjs-provider: 3.0.1_yjs@13.5.36
   y-prosemirror: 1.0.19_zjjqabpiyzk247fhmufachdr54
   y-protocols: 1.0.5
   yjs: 13.5.36
@@ -317,6 +319,14 @@ packages:
     resolution: {integrity: sha512-PIeMbHqMt4DnUP3MA/Flc0HElYjMXArsw1qwJZcm9sqR8mq3l8NYizFMty0pWwE/tzIGH3EKK5+jes5mAr85yw==}
     dev: false
 
+  /js-base64/3.7.5:
+    resolution: {integrity: sha512-3MEt5DTINKqfScXKfJFrRbxkrnk2AxPWGBL/ycjz4dK8iqiSJ06UxD8jh8xuh6p10TX4t2+7FsBYVxxQbMg+qA==}
+    dev: false
+
+  /just-throttle/4.2.0:
+    resolution: {integrity: sha512-/iAZv1953JcExpvsywaPKjSzfTiCLqeguUTE6+VmK15mOcwxBx7/FHrVvS4WEErMR03TRazH8kcBSHqMagYIYg==}
+    dev: false
+
   /lib0/0.2.51:
     resolution: {integrity: sha512-05Erb3465CxJa38LQlMz4EbetNvRna1S3BzqEjC0/pmp5cQuQSfNNmeS0722Wev1dRlMUp2Cql0gQ55krSXf2Q==}
     engines: {node: '>=12'}
@@ -518,6 +528,16 @@ packages:
 
   /w3c-keyname/2.2.4:
     resolution: {integrity: sha512-tOhfEwEzFLJzf6d1ZPkYfGj+FWhIpBux9ppoP3rlclw3Z0BZv3N7b7030Z1kYth+6rDuAsXUFr+d0VE6Ed1ikw==}
+    dev: false
+
+  /webxdc-yjs-provider/3.0.1_yjs@13.5.36:
+    resolution: {integrity: sha512-SQTCIV+m5afcbFgxEZyiwoOTQJxr5/xU2ZKKRsPsC9QMvWzp/5C5SzDS4fh1B/If4JaqrZF4OI4K5sd38yXPuA==}
+    peerDependencies:
+      yjs: ^13.0.0
+    dependencies:
+      js-base64: 3.7.5
+      just-throttle: 4.2.0
+      yjs: 13.5.36
     dev: false
 
   /y-prosemirror/1.0.19_zjjqabpiyzk247fhmufachdr54:
