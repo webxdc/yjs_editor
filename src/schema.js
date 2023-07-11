@@ -1,8 +1,12 @@
+//@ts-check
 import { Schema } from 'prosemirror-model'
 
 const brDOM = ['br']
 
-const calcYchangeDomAttrs = (attrs: { ychange: { user: any; state: any } | null }, domAttrs = {}) => {
+/**
+ * @param {{ ychange: { user: any; state: any } | null }} attrs
+ */
+const calcYchangeDomAttrs = (attrs, domAttrs = {}) => {
   domAttrs = Object.assign({}, domAttrs)
   if (attrs.ychange !== null) {
     domAttrs.ychange_user = attrs.ychange.user

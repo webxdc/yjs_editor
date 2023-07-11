@@ -1,3 +1,27 @@
+#extra-buttons {
+  float: right;
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+#extra-buttons button {
+  border-radius: 0.25rem;
+  background: transparent;
+  border-width: 0;
+  padding: 0.25rem;
+  cursor: pointer;
+}
+#extra-buttons #sync {
+  margin-right: 0.5rem;
+  background-color: #6666;
+}
+#extra-buttons #theme span::before {
+  content: '☀️';
+}
+.dark #extra-buttons #theme span::before {
+  content: '🌙';
+}
+
 /* Custom styles for rendering remote cursor locations */
 placeholder {
   display: inline;
